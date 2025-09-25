@@ -1,5 +1,6 @@
 from socket import *  #importere alle sockets, socket er navnet på library.
 import threading
+import random
 
 
 
@@ -9,19 +10,38 @@ def service(connectionSocket):
         sentence = connectionSocket.recv(1024).decode().strip() #strip bruges så man kan exit
         
         # Split ved første mellemrum
-        parts = sentence.split(" ", 1) #Splitter sentence i 2 parts, første bid: command, anden bid: message
+        parts = sentence.split(" ", 2) #Splitter sentence i 3 parts, første bid: command, anden bid: message, tredje bid: message 2
         command = parts[0].lower() #Command er den varriable vi bruge til fx 'upper' for at få beskeden til at blive sendt i uppercase
         message = parts[1] if len(parts) > 1 else "" #message, er anden del af splittet som er beskeden man vil have gjort noget med
+        message2 = parts[2] if len(parts) > 2 else "" 
         #man bliver nød til at specify at hvis længden af parts er større end 1 skal den sende beskeden tilbage, ellers skal den sende ""
 
-        if command == 'upper':
-            capitalizedSentence = message.upper() #ny variabel som konvertere message til uppercase
-            connectionSocket.send(capitalizedSentence.encode()) #sende den nye uppercase message tilbage til client
-        elif command == 'double':
-            doubleSentence = message = message + message # ny variabel som konvertere beskeden til dobbelt besked
-            connectionSocket.send(doubleSentence.encode()) # sender den nye dobbelt besked tilbage til client
-        else:
-            connectionSocket.send(sentence.encode()) #in case man ikke bruger en command, sender den bare base beskeden tilbage
+        if command == "add":   #Tager to integers og plusser dem, sender en fejlbesked hvis syntax er forkert
+                try:
+                    a = int(message)
+                    b = int(message2)
+                    result = str(a + b)
+                except (ValueError, TypeError):
+                    result = "ERROR: brug 'add <tal1> <tal2>' f.eks. 'add 2 3'"
+                connectionSocket.sendall(result.encode())
+        elif command == 'subtract':
+                try:
+                    a = int(message)
+                    b = int(message2)
+                    result = str(a - b)
+                except (ValueError, TypeError):
+                    result = "ERROR: brug 'subtract <tal1> <tal2>' f.eks. 'subtract 2 3'"
+                connectionSocket.sendall(result.encode())
+        elif command == 'random':
+                try:
+                    a = int(message)
+                    b = int(message2)
+                    rand_num = random.randint(a, b)
+                    result = f"{rand_num}"
+                except ValueError:
+                    result = "ERROR: brug 'random <lavTal> <højTal>' fx 'random 10 50'"
+                connectionSocket.sendall(result.encode()) 
+        
         
         if sentence == 'exit':
             connectionSocket.close() #lukker connection
